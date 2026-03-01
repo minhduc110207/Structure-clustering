@@ -106,7 +106,8 @@ Hai phương pháp bổ trợ, chỉ loại mẫu bị **cả hai** phát hiện
 
 ## 4. Pipeline
 
-%% Định nghĩa các bước
+graph LR
+    %% Định nghĩa các bước
     S0["<b>Stage 0</b><br/>QM9 Data<br/>(134k mol)"] 
     S1["<b>Stage 1</b><br/>SOAP<br/>(DScribe)"]
     S2["<b>Stage 2</b><br/>Welford<br/>(Scaler)"]
