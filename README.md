@@ -106,6 +106,7 @@ Hai phương pháp bổ trợ, chỉ loại mẫu bị **cả hai** phát hiện
 
 ## 4. Pipeline
 
+```mermaid
 graph TD
     %% Define Nodes
     DATA[("QM9 Dataset<br/>(134k Molecules)")]
