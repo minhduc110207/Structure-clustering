@@ -5,7 +5,7 @@
 
 ## 1. Tổng Quan (Overview)
 
-Dự án này triển khai một pipeline **học máy không giám sát** (unsupervised machine learning) để **phân loại và phân cụm cấu trúc hình học phân tử**, dựa trên bài nghiên cứu *"Phân loại cấu trúc"*.
+Dự án này triển khai một pipeline **học máy không giám sát** (unsupervised machine learning) để **phân loại và phân cụm cấu trúc hình học phân tử**.
 
 **Mục tiêu khoa học**: Xây dựng một không gian cấu trúc (structural manifold) từ tập dữ liệu phân tử lý tưởng (QM9), sau đó sử dụng phương pháp phân cụm để nhận diện các nhóm cấu trúc hình học đặc trưng. Pipeline có khả năng mở rộng để so sánh cấu trúc lý tưởng (tính toán lượng tử) với cấu trúc thực nghiệm (nhiễu xạ tia X từ CCD), nhằm phát hiện các **sai lệch cấu trúc** (structural distortions) do:
 
