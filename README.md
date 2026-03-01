@@ -106,15 +106,37 @@ Hai phương pháp bổ trợ, chỉ loại mẫu bị **cả hai** phát hiện
 
 ## 4. Pipeline
 
-```
-┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│  QM9 Data   │───▶│  SOAP    │───▶│ Welford  │───▶│  IPCA    │───▶│ Anomaly  │───▶│ K-means  │───▶│ Analysis │
-│  (134k mol) │    │ (DScribe)│    │ (Scaler) │    │ (95%var) │    │ (IF+SVM) │    │ (Best K) │    │ (Props)  │
-└─────────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-     Stage 0         Stage 1        Stage 2         Stage 3         Stage 4         Stage 5         Stage 7
+```mermaid
+graph TD
+    A["📦 Stage 0: Data Loading<br/>QM9 Dataset ~134k molecules"]
+    B["🧪 Stage 1: SOAP Features<br/>DScribe — n_max=8, l_max=8, r_cut=6.0Å"]
+    C["📊 Stage 2: Welford Scaler<br/>Online mean/variance normalization"]
+    D["📉 Stage 3: Incremental PCA<br/>7,380 → 103 dims (95% variance)"]
+    E["🔍 Stage 4: Anomaly Detection<br/>Isolation Forest + One-class SVM"]
+    F["🎯 Stage 5: K-means Clustering<br/>Elbow + Silhouette + DBI → Best K"]
+    G["📈 Stage 6: Visualization<br/>PCA variance, clustering plots"]
+    H["🔬 Stage 7: Cluster Analysis<br/>Atom count, weight, Rg, composition"]
+    I["💾 Stage 8: Export Models<br/>Pickle → models/ directory"]
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I
+
+    E -- "3.9% removed<br/>(consensus)" --> E1["🗑️ Anomalies"]
+    F -- "Best K=3" --> F1["📋 Cluster Labels"]
+
+    style A fill:#4CAF50,color:#fff,stroke:#388E3C
+    style B fill:#2196F3,color:#fff,stroke:#1565C0
+    style C fill:#FF9800,color:#fff,stroke:#EF6C00
+    style D fill:#9C27B0,color:#fff,stroke:#6A1B9A
+    style E fill:#f44336,color:#fff,stroke:#C62828
+    style F fill:#00BCD4,color:#fff,stroke:#00838F
+    style G fill:#607D8B,color:#fff,stroke:#37474F
+    style H fill:#795548,color:#fff,stroke:#4E342E
+    style I fill:#4CAF50,color:#fff,stroke:#388E3C
+    style E1 fill:#ffcdd2,color:#c62828,stroke:#ef9a9a
+    style F1 fill:#b2dfdb,color:#00695c,stroke:#80cbc4
 ```
 
-Tất cả các stage đều xử lý theo **batch** qua HDF5 chunked I/O và `partial_fit` APIs, đảm bảo khả năng chạy trên Kaggle (16-30GB RAM).
+> Tất cả các stage đều xử lý theo **batch** qua HDF5 chunked I/O và `partial_fit` APIs, đảm bảo khả năng chạy trên Kaggle (16-30GB RAM). Hệ thống **checkpoint** cho phép resume từ stage cuối cùng hoàn thành.
 
 ## 5. Kết Quả (Results)
 
@@ -145,13 +167,34 @@ pip install -r requirements.txt
 python kaggle_notebook.py
 ```
 
+### Sử dụng model đã train
+```bash
+# Demo
+python predict.py --demo
+
+# Phân loại 1 phân tử
+python predict.py molecule.xyz
+
+# Phân loại thư mục
+python predict.py my_molecules/
+```
+
 ## 7. Cấu Trúc Dự Án
 
 ```
-KHVL/
-├── kaggle_notebook.py     # Pipeline chính (7 stages + checkpoint)
+Structure-clustering/
+├── kaggle_notebook.py     # Pipeline chính (8 stages + checkpoint)
+├── predict.py             # Inference với pre-trained models
+├── export_models.py       # Export utility
 ├── test_pipeline.py       # Test suite (11 test cases)
 ├── requirements.txt       # Dependencies
+├── models/                # Pre-trained models (~25 MB)
+│   ├── scaler.pkl
+│   ├── ipca.pkl
+│   ├── kmeans.pkl
+│   ├── isolation_forest.pkl
+│   ├── ocsvm.pkl
+│   └── config.json
 ├── README.md
 ├── LICENSE                # MIT
 └── .gitignore
