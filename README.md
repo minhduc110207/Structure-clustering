@@ -106,13 +106,35 @@ Hai phương pháp bổ trợ, chỉ loại mẫu bị **cả hai** phát hiện
 
 ## 4. Pipeline
 
-```
-┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│  QM9 Data   │───▶│  SOAP    │───▶│ Welford  │───▶│  IPCA    │───▶│ Anomaly  │───▶│ K-means  │───▶│ Analysis │
-│  (134k mol) │    │ (DScribe)│    │ (Scaler) │    │ (95%var) │    │ (IF+SVM) │    │ (Best K) │    │ (Props)  │
-└─────────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-     Stage 0         Stage 1        Stage 2         Stage 3         Stage 4         Stage 5         Stage 7
-```
+%% Định nghĩa các bước
+    S0["<b>Stage 0</b><br/>QM9 Data<br/>(134k mol)"] 
+    S1["<b>Stage 1</b><br/>SOAP<br/>(DScribe)"]
+    S2["<b>Stage 2</b><br/>Welford<br/>(Scaler)"]
+    S3["<b>Stage 3</b><br/>IPCA<br/>(95% var)"]
+    S4["<b>Stage 4</b><br/>Anomaly<br/>(IF + SVM)"]
+    S5["<b>Stage 5</b><br/>K-means<br/>(Best K)"]
+    S7["<b>Stage 7</b><br/>Analysis<br/>(Props)"]
+
+    %% Kết nối các bước
+    S0 --> S1 --> S2 --> S3 --> S4 --> S5 --> S7
+
+    %% Chú thích về kỹ thuật xử lý
+    subgraph Processing["Kỹ thuật xử lý (Kaggle Environment)"]
+        direction TB
+        P1["HDF5 chunked I/O"]
+        P2["partial_fit APIs (Batch processing)"]
+    end
+
+    %% Đầu ra mô hình (Export)
+    subgraph Output["Folder: /models (25.2 MB)"]
+        M1["scaler.pkl"]
+        M2["ipca.pkl"]
+        M3["isolation_forest.pkl"]
+        M4["kmeans.pkl"]
+        M5["config.json"]
+    end
+
+    S7 -.-> Output
 
 Tất cả các stage đều xử lý theo **batch** qua HDF5 chunked I/O và `partial_fit` APIs, đảm bảo khả năng chạy trên Kaggle (16-30GB RAM).
 
