@@ -106,28 +106,26 @@ Hai phương pháp bổ trợ, chỉ loại mẫu bị **cả hai** phát hiện
 
 ## 4. Pipeline
 
-graph LR
-    %% Định nghĩa các bước
-    S0["<b>Stage 0</b><br/>QM9 Data<br/>(134k mol)"] 
-    S1["<b>Stage 1</b><br/>SOAP<br/>(DScribe)"]
-    S2["<b>Stage 2</b><br/>Welford<br/>(Scaler)"]
-    S3["<b>Stage 3</b><br/>IPCA<br/>(95% var)"]
-    S4["<b>Stage 4</b><br/>Anomaly<br/>(IF + SVM)"]
-    S5["<b>Stage 5</b><br/>K-means<br/>(Best K)"]
-    S7["<b>Stage 7</b><br/>Analysis<br/>(Props)"]
-
-    %% Kết nối các bước
-    S0 --> S1 --> S2 --> S3 --> S4 --> S5 --> S7
-
-    %% Chú thích về kỹ thuật xử lý
-    subgraph Processing["Kỹ thuật xử lý (Kaggle Environment)"]
-        direction TB
-        P1["HDF5 chunked I/O"]
-        P2["partial_fit APIs (Batch processing)"]
+graph TD
+    %% Define Nodes
+    DATA[("QM9 Dataset<br/>(134k Molecules)")]
+    
+    subgraph Preprocessing ["Data Pipeline (Batch-wise)"]
+        SOAP["<b>SOAP Extraction</b><br/>High-dimensional descriptors"]
+        SCALER["<b>Welford Scaler</b><br/>Incremental Standardization"]
+        IPCA["<b>Incremental PCA</b><br/>Dimensionality Reduction (95% Var)"]
     end
 
-    %% Đầu ra mô hình (Export)
-    subgraph Output["Folder: /models (25.2 MB)"]
+    subgraph Detection ["Anomaly Detection"]
+        IF["Isolation Forest"]
+        OCSVM["One-Class SVM"]
+    end
+
+    subgraph Clustering ["Unsupervised Learning"]
+        KMEANS["<b>K-Means</b><br/>Structural Clustering"]
+    end
+
+    subgraph Output ["Model Artifacts (/models)"]
         M1["scaler.pkl"]
         M2["ipca.pkl"]
         M3["isolation_forest.pkl"]
@@ -135,7 +133,19 @@ graph LR
         M5["config.json"]
     end
 
-    S7 -.-> Output
+    %% Workflow Connections
+    DATA --> SOAP
+    SOAP --> SCALER
+    SCALER --> IPCA
+    IPCA --> IF
+    IF --> OCSVM
+    OCSVM --> KMEANS
+    
+    %% Export Connections
+    KMEANS -.-> M4
+    IPCA -.-> M2
+    SCALER -.-> M1
+    M4 & M1 & M2 --> M5
 
 Tất cả các stage đều xử lý theo **batch** qua HDF5 chunked I/O và `partial_fit` APIs, đảm bảo khả năng chạy trên Kaggle (16-30GB RAM).
 
